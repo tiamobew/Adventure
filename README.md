@@ -1,5 +1,18 @@
 # เกาะลอยฟ้า ผจญภัยทศนิยม (Sky Island Decimal Race)
 
+## ▶️ เล่นออนไลน์ (GitHub Pages)
+
+- **เกมผจญภัยทศนิยม 3D (หลัก):** https://tiamobew.github.io/skyisland/
+- **เกมกระดานเดิม:** https://tiamobew.github.io/skyisland/board.html
+
+> เปิดใช้ GitHub Pages ครั้งแรก: ไปที่ repo → **Settings → Pages → Build and deployment**
+> เลือก **Source: Deploy from a branch**, **Branch: `main` / `(root)`** แล้ว Save รอสักครู่ให้ลิงก์พร้อม
+
+ไฟล์เกมผจญภัย (`part2.html`) เป็น HTML ไฟล์เดียวจบ ทำงานได้ทันทีบน static hosting
+(โหลด Three.js จาก CDN ไม่ต้อง build) — ดูวิธีเชื่อม Google Sheet ได้ใน `คู่มือ-Google-Sheet.md`
+
+---
+
 เกมกระดานแบบบันไดงู 3D บนเกาะลอยฟ้า สำหรับผู้เล่น 2-4 คน
 ตอบโจทย์ปัญหาทศนิยมระดับประถม (ป.6) ถูก → ทอยลูกเต๋าเดินหน้า
 ตอบผิดหรือหมดเวลา → หยุดเดิน 1 ตา ใครถึงช่องสุดท้ายก่อนชนะ
