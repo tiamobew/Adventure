@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin จัดการโจทย์ — Sky Island</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#10213f;--blue:#2563eb;--sky:#eaf6ff;--card:#fff;--line:#cbdff4;--ink:#15243a;--muted:#60758f;--green:#16804f;--red:#c43737;--amber:#a76800}
+*{box-sizing:border-box}body{margin:0;font-family:"Sarabun","Segoe UI",sans-serif;background:linear-gradient(145deg,#eaf7ff,#dbeafe);color:var(--ink);min-height:100vh}
+button,input,select,textarea{font:inherit}.hidden{display:none!important}
+.topbar{background:linear-gradient(115deg,#10213f,#164e83);color:#fff;padding:18px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 6px 20px #0f274533}
+.topbar h1{margin:0;font-size:clamp(22px,3vw,32px)}.topbar small{display:block;color:#cce7ff;font-weight:500;margin-top:3px}.top-actions{display:flex;gap:8px;flex-wrap:wrap}
+.container{width:min(1180px,calc(100% - 28px));margin:24px auto 48px}.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:0 12px 30px #315b8420}
+.login{max-width:440px;margin:9vh auto}.login h2{margin:0 0 8px}.login p{color:var(--muted)}.login input{width:100%;padding:13px;border:1px solid var(--line);border-radius:10px;margin:10px 0}
+.btn{border:0;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer;background:#dcecff;color:#163d70}.btn:hover{filter:brightness(.97)}.btn.primary{background:var(--blue);color:#fff}.btn.good{background:#d9f7e9;color:var(--green)}.btn.danger{background:#ffe3e3;color:var(--red)}.btn.light{background:#ffffff1f;color:#fff;border:1px solid #ffffff55;text-decoration:none}.btn.small{padding:7px 10px;font-size:14px}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px}.toolbar select{padding:10px;border:1px solid var(--line);border-radius:10px;background:#fff}.spacer{flex:1}
+.summary{display:grid;grid-template-columns:repeat(4,minmax(120px,1fr));gap:12px;margin-bottom:16px}.stat{padding:15px;border-radius:14px;background:#f3f9ff;border:1px solid var(--line)}.stat strong{display:block;font-size:27px}.stat span{color:var(--muted)}
+.notice{padding:11px 14px;border-radius:10px;margin-bottom:14px;background:#edf7ff;color:#174d79}.notice.ok{background:#e6f8ef;color:var(--green)}.notice.error{background:#ffe8e8;color:var(--red)}
+.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:14px}table{width:100%;border-collapse:collapse;min-width:820px}th,td{padding:12px;border-bottom:1px solid #e2edf7;text-align:left;vertical-align:top}th{background:#edf6ff;color:#31516f;position:sticky;top:0}tr:last-child td{border-bottom:0}.question-text{max-width:460px;white-space:normal}.badge{display:inline-block;border-radius:999px;padding:4px 9px;font-weight:700;font-size:13px}.badge.easy{background:#def8e8;color:#147145}.badge.medium{background:#fff0c9;color:#835800}.badge.hard{background:#ffe0e0;color:#a12e2e}.row-actions{display:flex;gap:6px;flex-wrap:wrap}.empty{text-align:center;color:var(--muted);padding:28px}
+.editor{margin-top:18px}.editor h2{margin-top:0}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.field{display:flex;flex-direction:column;gap:6px}.field.full{grid-column:1/-1}.field label{font-weight:700}.field input,.field select,.field textarea{padding:11px;border:1px solid var(--line);border-radius:10px;background:#fbfdff}.field textarea{min-height:90px;resize:vertical}.choice-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.check-row{display:flex;align-items:center;gap:8px;margin-top:8px}.editor-actions{display:flex;gap:9px;margin-top:16px;flex-wrap:wrap}
+.footnote{margin-top:14px;color:var(--muted);font-size:14px;line-height:1.65}
+@media(max-width:760px){.topbar{align-items:flex-start;flex-direction:column}.summary{grid-template-columns:1fr 1fr}.form-grid,.choice-grid{grid-template-columns:1fr}.field.full{grid-column:auto}}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div><h1>⚙️ Admin จัดการโจทย์</h1><small>Sky Island — เลือก เพิ่ม แก้ไข และปิดใช้งานโจทย์</small></div>
+  <div class="top-actions">
+    <a class="btn light" href="board.html">🎮 กลับเข้าเกม</a>
+    <button class="btn light hidden" id="logout-btn">ออกจากระบบ</button>
+  </div>
+</header>
+
+<main class="container">
+  <section class="card login" id="login-card">
+    <h2>เข้าสู่หน้าผู้ดูแล</h2>
+    <p>กรอกรหัส Admin เพื่อจัดการคลังโจทย์</p>
+    <form id="login-form">
+      <label for="pin-input">รหัส Admin</label>
+      <input id="pin-input" type="password" inputmode="numeric" autocomplete="current-password" required>
+      <button class="btn primary" type="submit">เข้าสู่ระบบ</button>
+    </form>
+    <div id="login-message" class="notice error hidden"></div>
+  </section>
+
+  <section id="admin-app" class="hidden">
+    <div class="summary">
+      <div class="stat"><strong id="stat-all">0</strong><span>โจทย์ทั้งหมด</span></div>
+      <div class="stat"><strong id="stat-easy">0</strong><span>ระดับง่าย</span></div>
+      <div class="stat"><strong id="stat-medium">0</strong><span>ระดับปานกลาง</span></div>
+      <div class="stat"><strong id="stat-hard">0</strong><span>ระดับยาก</span></div>
+    </div>
+
+    <section class="card">
+      <div class="toolbar">
+        <select id="level-filter" aria-label="เลือกด่านที่ต้องการแสดง">
+          <option value="all">ทุกระดับ</option>
+          <option value="easy">ระดับง่าย</option>
+          <option value="medium">ระดับปานกลาง</option>
+          <option value="hard">ระดับยาก</option>
+        </select>
+        <button class="btn primary" id="add-btn">＋ เพิ่มโจทย์</button>
+        <span class="spacer"></span>
+        <button class="btn" id="export-btn">⬇ ส่งออก JSON</button>
+        <label class="btn" for="import-input">⬆ นำเข้า JSON</label>
+        <input class="hidden" id="import-input" type="file" accept=".json,application/json">
+        <button class="btn danger" id="reset-btn">↺ คืนค่าโจทย์เริ่มต้น</button>
+      </div>
+      <div id="status-message" class="notice hidden"></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>ใช้</th><th>ระดับ</th><th>โจทย์</th><th>คำตอบ</th><th>ตัวเลือก</th><th>จัดการ</th></tr></thead>
+          <tbody id="question-rows"></tbody>
+        </table>
+      </div>
+      <p class="footnote">โจทย์ที่เปิดใช้งานจะถูกสุ่มใช้ในเกมตามระดับที่ผู้เล่นเลือก การแก้ไขจะมีผลกับเกมที่เปิดด้วยเบราว์เซอร์และอุปกรณ์เครื่องนี้</p>
+    </section>
+
+    <section class="card editor hidden" id="editor-card">
+      <h2 id="editor-title">เพิ่มโจทย์ใหม่</h2>
+      <form id="question-form">
+        <input id="question-id" type="hidden">
+        <div class="form-grid">
+          <div class="field">
+            <label for="question-level">ระดับ</label>
+            <select id="question-level" required>
+              <option value="easy">ง่าย</option><option value="medium">ปานกลาง</option><option value="hard">ยาก</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="question-answer">คำตอบที่ถูกต้อง</label>
+            <input id="question-answer" type="number" step="any" required>
+          </div>
+          <div class="field full">
+            <label for="question-text">ข้อความโจทย์</label>
+            <textarea id="question-text" required></textarea>
+          </div>
+          <div class="field full">
+            <label for="question-hint">คำใบ้</label>
+            <textarea id="question-hint" required></textarea>
+          </div>
+          <div class="field full">
+            <label>ตัวเลือกคำตอบ 4 ตัว (ต้องมีคำตอบที่ถูกต้อง 1 ตัว)</label>
+            <div class="choice-grid">
+              <input class="choice-input" type="number" step="any" aria-label="ตัวเลือกที่ 1" required>
+              <input class="choice-input" type="number" step="any" aria-label="ตัวเลือกที่ 2" required>
+              <input class="choice-input" type="number" step="any" aria-label="ตัวเลือกที่ 3" required>
+              <input class="choice-input" type="number" step="any" aria-label="ตัวเลือกที่ 4" required>
+            </div>
+          </div>
+        </div>
+        <label class="check-row"><input id="question-enabled" type="checkbox" checked> เปิดใช้โจทย์ข้อนี้ในเกม</label>
+        <div class="editor-actions">
+          <button class="btn primary" type="submit">💾 บันทึกโจทย์</button>
+          <button class="btn" id="cancel-btn" type="button">ยกเลิก</button>
+        </div>
+      </form>
+    </section>
+  </section>
+</main>
+
+<script src="js/question-store.js"></script>
+<script>
+(function(){
+  'use strict';
+  const ADMIN_PIN = '044441300';
+  const SESSION_KEY = 'skyisland_admin_authenticated';
+  const labels = {easy:'ง่าย',medium:'ปานกลาง',hard:'ยาก'};
+  let questions = [];
+
+  const el = id => document.getElementById(id);
+  const loginCard = el('login-card');
+  const adminApp = el('admin-app');
+  const logoutBtn = el('logout-btn');
+  const editorCard = el('editor-card');
+  const rows = el('question-rows');
+
+  function escapeHtml(value){
+    return String(value).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+  }
+
+  function showStatus(message, type='ok'){
+    const box = el('status-message');
+    box.textContent = message;
+    box.className = `notice ${type}`;
+    setTimeout(() => box.classList.add('hidden'), 3500);
+  }
+
+  function openApp(){
+    loginCard.classList.add('hidden');
+    adminApp.classList.remove('hidden');
+    logoutBtn.classList.remove('hidden');
+    questions = QuestionStore.load();
+    render();
+  }
+
+  function render(){
+    const filter = el('level-filter').value;
+    const visible = filter === 'all' ? questions : questions.filter(q => q.level === filter);
+    el('stat-all').textContent = questions.length;
+    ['easy','medium','hard'].forEach(level => {
+      el(`stat-${level}`).textContent = questions.filter(q => q.level === level && q.enabled).length;
+    });
+    rows.innerHTML = visible.length ? visible.map(q => `
+      <tr>
+        <td><input class="toggle-question" data-id="${escapeHtml(q.id)}" type="checkbox" ${q.enabled?'checked':''} aria-label="เปิดใช้โจทย์"></td>
+        <td><span class="badge ${q.level}">${labels[q.level]}</span></td>
+        <td class="question-text">${escapeHtml(q.text)}<br><small>💡 ${escapeHtml(q.hint)}</small></td>
+        <td><strong>${q.answer}</strong></td>
+        <td>${q.choices.map(value => escapeHtml(value)).join(', ')}</td>
+        <td><div class="row-actions">
+          <button class="btn small edit-question" data-id="${escapeHtml(q.id)}">แก้ไข</button>
+          <button class="btn small duplicate-question" data-id="${escapeHtml(q.id)}">ทำสำเนา</button>
+          <button class="btn small danger delete-question" data-id="${escapeHtml(q.id)}">ลบ</button>
+        </div></td>
+      </tr>`).join('') : '<tr><td class="empty" colspan="6">ยังไม่มีโจทย์ในระดับนี้</td></tr>';
+  }
+
+  function persist(message){
+    questions = QuestionStore.save(questions);
+    render();
+    showStatus(message);
+  }
+
+  function openEditor(question){
+    const item = question || {
+      id:'',level:el('level-filter').value === 'all' ? 'easy' : el('level-filter').value,
+      enabled:true,text:'',answer:'',hint:'',choices:['','','','']
+    };
+    el('editor-title').textContent = question ? 'แก้ไขโจทย์' : 'เพิ่มโจทย์ใหม่';
+    el('question-id').value = item.id;
+    el('question-level').value = item.level;
+    el('question-text').value = item.text;
+    el('question-answer').value = item.answer;
+    el('question-hint').value = item.hint;
+    el('question-enabled').checked = item.enabled;
+    document.querySelectorAll('.choice-input').forEach((input,index) => input.value = item.choices[index] ?? '');
+    editorCard.classList.remove('hidden');
+    editorCard.scrollIntoView({behavior:'smooth',block:'start'});
+  }
+
+  el('login-form').addEventListener('submit', event => {
+    event.preventDefault();
+    if (el('pin-input').value !== ADMIN_PIN){
+      const message = el('login-message');
+      message.textContent = 'รหัส Admin ไม่ถูกต้อง';
+      message.classList.remove('hidden');
+      return;
+    }
+    sessionStorage.setItem(SESSION_KEY,'1');
+    openApp();
+  });
+
+  logoutBtn.addEventListener('click', () => {
+    sessionStorage.removeItem(SESSION_KEY);
+    location.reload();
+  });
+  el('level-filter').addEventListener('change', render);
+  el('add-btn').addEventListener('click', () => openEditor(null));
+  el('cancel-btn').addEventListener('click', () => editorCard.classList.add('hidden'));
+
+  rows.addEventListener('change', event => {
+    const checkbox = event.target.closest('.toggle-question');
+    if (!checkbox) return;
+    const item = questions.find(q => q.id === checkbox.dataset.id);
+    if (item){ item.enabled = checkbox.checked; persist('อัปเดตสถานะโจทย์แล้ว'); }
+  });
+
+  rows.addEventListener('click', event => {
+    const edit = event.target.closest('.edit-question');
+    const duplicate = event.target.closest('.duplicate-question');
+    const remove = event.target.closest('.delete-question');
+    const button = edit || duplicate || remove;
+    if (!button) return;
+    const item = questions.find(q => q.id === button.dataset.id);
+    if (!item) return;
+    if (edit) openEditor(item);
+    if (duplicate){
+      const copy = JSON.parse(JSON.stringify(item));
+      copy.id = `question-${Date.now()}`;
+      copy.text += ' (สำเนา)';
+      questions.push(copy);
+      persist('สร้างสำเนาโจทย์แล้ว');
+    }
+    if (remove && confirm('ต้องการลบโจทย์ข้อนี้ใช่หรือไม่?')){
+      questions = questions.filter(q => q.id !== item.id);
+      persist('ลบโจทย์แล้ว');
+      editorCard.classList.add('hidden');
+    }
+  });
+
+  el('question-form').addEventListener('submit', event => {
+    event.preventDefault();
+    const answer = Number(el('question-answer').value);
+    const choices = [...document.querySelectorAll('.choice-input')].map(input => Number(input.value));
+    if (new Set(choices).size !== 4){
+      showStatus('ตัวเลือกทั้ง 4 ต้องไม่ซ้ำกัน','error'); return;
+    }
+    if (!choices.includes(answer)){
+      showStatus('ตัวเลือกต้องมีคำตอบที่ถูกต้องอยู่ด้วย','error'); return;
+    }
+    const id = el('question-id').value || `question-${Date.now()}`;
+    const item = {
+      id,level:el('question-level').value,enabled:el('question-enabled').checked,
+      text:el('question-text').value.trim(),answer,hint:el('question-hint').value.trim(),choices
+    };
+    const index = questions.findIndex(q => q.id === id);
+    if (index >= 0) questions[index] = item; else questions.push(item);
+    persist(index >= 0 ? 'บันทึกการแก้ไขโจทย์แล้ว' : 'เพิ่มโจทย์ใหม่แล้ว');
+    editorCard.classList.add('hidden');
+  });
+
+  el('export-btn').addEventListener('click', () => {
+    const blob = new Blob([QuestionStore.exportJson()],{type:'application/json'});
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `skyisland-questions-${new Date().toISOString().slice(0,10)}.json`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+    showStatus('ส่งออกคลังโจทย์แล้ว');
+  });
+
+  el('import-input').addEventListener('change', async event => {
+    const file = event.target.files[0];
+    if (!file) return;
+    try{
+      questions = QuestionStore.importJson(await file.text());
+      render();
+      showStatus('นำเข้าคลังโจทย์สำเร็จ');
+    }catch(error){
+      showStatus(`นำเข้าไม่สำเร็จ: ${error.message}`,'error');
+    }
+    event.target.value = '';
+  });
+
+  el('reset-btn').addEventListener('click', () => {
+    if (!confirm('คืนค่าโจทย์เริ่มต้นทั้งหมดใช่หรือไม่? โจทย์ที่แก้เองจะถูกแทนที่')) return;
+    questions = QuestionStore.reset();
+    render();
+    editorCard.classList.add('hidden');
+    showStatus('คืนค่าโจทย์เริ่มต้นแล้ว');
+  });
+
+  if (sessionStorage.getItem(SESSION_KEY) === '1') openApp();
+})();
+</script>
+</body>
+</html>
