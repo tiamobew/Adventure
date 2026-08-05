@@ -6,10 +6,13 @@
 <title>เกาะลอยฟ้า ผจญภัยเลขคณิต</title>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
+<style>
+.admin-question-link{display:inline-block;margin:0 0 16px;padding:8px 14px;border-radius:10px;background:#e9f5ff;color:#174f83;font-weight:700;text-decoration:none;border:1px solid #aad5f4}
+.admin-question-link:hover{background:#d8edff}
+</style>
 </head>
 <body>
 
-  <!-- ===== ฉากหลัก แบ่ง 2 ฝั่ง: คำถาม (ซ้าย) / ภาพ 3D (ขวา) ===== -->
   <div id="game-layout">
     <div id="panel-question">
       <div id="player-panel"></div>
@@ -40,10 +43,10 @@
     </div>
   </div>
 
-  <!-- ===== หน้าจอเริ่มเกม: เลือกด่าน -> เวลา -> จำนวนผู้เล่น -> ตั้งชื่อ ===== -->
   <div id="start-screen" class="overlay">
     <div class="panel">
       <h1>เกาะลอยฟ้า ผจญภัยทศนิยม</h1>
+      <a class="admin-question-link" href="admin.html">⚙️ Admin จัดการโจทย์</a>
 
       <p>ขั้นที่ 1: เลือกด่านความยาก</p>
       <div id="level-buttons" class="button-row"></div>
@@ -70,7 +73,6 @@
     </div>
   </div>
 
-  <!-- ===== หน้าจอชนะ ===== -->
   <div id="win-screen" class="overlay hidden">
     <div class="panel">
       <h1 id="win-text"></h1>
@@ -79,7 +81,6 @@
     </div>
   </div>
 
-  <!-- ===== ลูกเต๋า 3D (CSS) แสดงตอนทอย ===== -->
   <div id="dice-overlay" class="hidden">
     <div class="dice-scene">
       <div class="dice-cube" id="dice-cube">
@@ -93,10 +94,8 @@
     </div>
   </div>
 
-  <!-- Three.js (non-module build, works even opened directly as a file) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-
-  <!-- ลำดับสคริปต์สำคัญ: questions -> scene -> path -> dice -> audio -> game -> main -->
+  <script src="js/question-store.js"></script>
   <script src="js/questions.js"></script>
   <script src="js/scene.js"></script>
   <script src="js/path.js"></script>
