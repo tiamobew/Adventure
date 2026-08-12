@@ -10,7 +10,8 @@ https://tiamobew.github.io/Adventure/
 
 เกมใช้ Google Sheet เป็นคลังโจทย์กลาง ทุกอุปกรณ์จะได้รับโจทย์ชุดเดียวกัน และตรวจการอัปเดตเมื่อกลับมาเปิดหน้าเกมหรือภายใน 1 นาที
 
-- `part2.html` — เกมผจญภัยหลัก
+- `index.html` — หน้า GitHub Pages ที่แสดง Google Web App เต็มหน้าจอ
+- `part2.html` — เกมผจญภัยหลักที่ใช้ใน Google Apps Script
 - `admin.html` — หน้า Admin สำหรับ Google Apps Script
 - `apps-script/Code.gs` — backend เชื่อม Google Sheet
 - `js/config.js` — URL ของ Web App
