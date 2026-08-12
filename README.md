@@ -5,6 +5,8 @@
 - **เกมผจญภัยทศนิยม 3D (หลัก):** https://tiamobew.github.io/skyisland/
 - **เกมกระดานเดิม:** https://tiamobew.github.io/skyisland/board.html
 
+การซิงก์โจทย์ทุกอุปกรณ์ใช้ Google Sheet เป็นคลังกลาง: Deploy `Code.gs`, `part2.html` และ `admin.html` เป็น Google Apps Script Web app แล้วใส่ URL ที่ได้ใน `js/config.js` รายละเอียดอยู่ใน `คู่มือ-Google-Sheet.md`
+
 > เปิดใช้ GitHub Pages ครั้งแรก: ไปที่ repo → **Settings → Pages → Build and deployment**
 > เลือก **Source: Deploy from a branch**, **Branch: `main` / `(root)`** แล้ว Save รอสักครู่ให้ลิงก์พร้อม
 

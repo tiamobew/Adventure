@@ -22,7 +22,7 @@
 
   /* ---- เวที 3D เต็มจอ อยู่หลังสุด ---- */
   #stage{ position:fixed; inset:0; z-index:0; }
-  #stage canvas{ display:block; }
+  #stage canvas{ display:block; touch-action:none; }
 
   /* ---- แถบ HUD ด้านบน ---- */
   #hud{
@@ -162,6 +162,7 @@
     padding:6px 4px; border-bottom:1px dashed #f0d6e0; }
   .score-row.total{ font-weight:700; color:#2f9e63; font-size:22px; border-bottom:none; }
   #qSource{ font-size:13px; color:#8fae7a; margin-top:6px; }
+  #adminLink{ display:inline-block; margin-top:8px; color:#7d6b89; font-size:13px; }
   .saveStatus{ font-size:14px; color:#7ba86a; min-height:18px; margin-top:8px; opacity:0; transition:opacity .3s; }
   .saveStatus.show{ opacity:1; }
 
@@ -172,6 +173,38 @@
   #errorBanner .box{ max-width:520px; text-align:center; }
   #errorMsg{ font-size:22px; color:var(--pink-deep); font-weight:700; }
   #errorDetail{ font-size:12px; color:#b28; white-space:pre-wrap; margin-top:10px; opacity:.7; }
+
+  @media (max-width:700px){
+    #hud{gap:6px;padding:7px 8px}
+    .hud-card{padding:6px 9px;border-radius:13px;font-size:15px;gap:5px}
+    #progressBox{order:3;width:100%;justify-content:center;padding:5px 8px}
+    .pdot{width:10px;height:10px}
+    #playPanel{bottom:max(7px,env(safe-area-inset-bottom));width:min(96vw,420px);gap:7px}
+    #questionBox{padding:10px 12px;border-radius:18px}
+    #eqText{font-size:clamp(25px,8vw,34px);margin:2px 0}
+    #answerBubble{min-height:37px;font-size:25px}
+    #keypad{gap:6px}
+    #keypad button{font-size:21px;padding:9px 0;border-radius:11px}
+    #minimapWrap{left:7px;bottom:7px}
+    #minimap{width:82px;height:82px;border-width:3px}
+    #minimapLabel{display:none}
+    #muteBtn{right:8px;bottom:8px;width:44px;height:44px;font-size:20px}
+    #camControls{right:7px;gap:5px}
+    #camControls button{width:40px;height:40px;border-radius:11px;font-size:19px}
+    .overlay{padding:10px}
+    .overlay-card{padding:20px 16px;border-width:4px;border-radius:22px;max-height:96dvh}
+    .overlay-card h1{font-size:clamp(25px,8vw,32px)}
+    .emoji-big{font-size:43px}
+    .hint-line{font-size:13px}
+  }
+  @media (max-height:650px){
+    #questionBox{padding:7px 10px}
+    #eqText{font-size:25px}
+    #eqNote{display:none}
+    #answerBubble{min-height:32px;margin-top:4px;font-size:22px}
+    #keypad{gap:4px}
+    #keypad button{padding:6px 0;font-size:19px;box-shadow:0 3px 0 #bfe3f5}
+  }
 </style>
 </head>
 <body>
@@ -246,6 +279,7 @@
         <button class="color-dot" style="--c:#ff8a3d" data-color="0xff8a3d" title="ส้ม"></button>
       </div>
       <div id="qSource">🎲 ใช้โจทย์สุ่มอัตโนมัติ</div>
+      <a id="adminLink" href="admin.html">⚙️ จัดการโจทย์</a>
       <button id="startBtn" class="btn">เริ่มผจญภัย! 🚀</button>
     </div>
   </div>
@@ -283,6 +317,7 @@
 
   <!-- ไลบรารี Three.js (r128, แบบ global ไม่ใช่ module เปิดไฟล์ตรงๆ ได้) -->
   <script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
+  <script src="js/config.js"></script>
 
 <script>
 /* ---- global safety net: if anything below throws, show a visible message
@@ -409,12 +444,16 @@ function lerpColor(hexA, hexB, t){
    • วิธี A (แนะนำสำหรับมือใหม่): เอาไฟล์นี้ไปวางใน Google Apps Script แล้วเปิดผ่านลิงก์ Web App
      -> โค้ดจะใช้ google.script.run อัตโนมัติ ไม่ต้องตั้งค่าอะไรเพิ่ม
    • วิธี B: เปิดไฟล์นี้ตรงๆ / วางบนเว็บอื่น แล้วนำลิงก์ Web App มาใส่ที่ WEBAPP_URL ข้างล่าง */
-const WEBAPP_URL = ''; // <-- วิธี B: วางลิงก์ที่ deploy แล้วตรงนี้ เช่น 'https://script.google.com/macros/s/xxxxx/exec'
+const WEBAPP_URL = window.SKYISLAND_CONFIG && window.SKYISLAND_CONFIG.webAppUrl
+  ? String(window.SKYISLAND_CONFIG.webAppUrl).replace(/\/$/, '')
+  : '';
 
 const SHEET_QUESTIONS = { easy:[], medium:[], hard:[], boss:[] };
 let questionsLoaded = false;
 
 function gasReady(){ return typeof google!=='undefined' && google.script && google.script.run; }
+
+if(gasReady()) document.getElementById('adminLink').href = '?page=admin';
 
 // แปลงชื่อระดับให้เป็นค่ามาตรฐาน (รองรับทั้งไทยและอังกฤษ)
 function normalizeTier(t){
@@ -425,12 +464,14 @@ function normalizeTier(t){
   if(t==='boss'||t==='บอส') return 'boss';
   return null;
 }
-// รับข้อมูลโจทย์จากชีท (แต่ละแถวเป็น [ระดับ, โจทย์, คำตอบ]) มาเก็บไว้ในเกม
+// รับได้ทั้งรูปแบบใหม่ {level,text,answer,...} และชีทเดิม [ระดับ,โจทย์,คำตอบ]
 function ingestQuestions(rows){
   SHEET_QUESTIONS.easy=[]; SHEET_QUESTIONS.medium=[]; SHEET_QUESTIONS.hard=[]; SHEET_QUESTIONS.boss=[];
   (rows||[]).forEach(function(r){
-    const tier = normalizeTier(r[0]);
-    let text = r[1], ans = r[2];
+    const isObject = r && !Array.isArray(r) && typeof r === 'object';
+    const tier = normalizeTier(isObject ? r.level : r[0]);
+    let text = isObject ? r.text : r[1];
+    let ans = isObject ? r.answer : r[2];
     if(tier===null || text==null || text==='' || ans==null || ans==='') return;
     const answer = parseFloat(ans);
     if(isNaN(answer)) return;
@@ -449,12 +490,19 @@ function loadQuestions(){
       .withFailureHandler(function(err){ console.warn('โหลดโจทย์จากชีทไม่ได้', err); })
       .getQuestions();
   } else if(WEBAPP_URL){
-    fetch(WEBAPP_URL + '?action=questions')
+    fetch(WEBAPP_URL + '?action=questions&t=' + Date.now(), {cache:'no-store'})
       .then(function(r){ return r.json(); })
       .then(ingestQuestions)
       .catch(function(err){ console.warn('โหลดโจทย์จากชีทไม่ได้', err); });
   }
 }
+
+// อุปกรณ์ที่เปิดหน้าเกมค้างไว้จะได้รับโจทย์ใหม่อัตโนมัติภายใน 1 นาที
+window.addEventListener('focus', loadQuestions);
+document.addEventListener('visibilitychange', function(){
+  if(!document.hidden) loadQuestions();
+});
+setInterval(loadQuestions, 60000);
 function updateQuestionSource(n){
   const s = document.getElementById('qSource');
   if(!s) return;
