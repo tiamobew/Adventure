@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin จัดการโจทย์ — Sky Island</title>
+<title>Admin จัดการโจทย์ — ผจญภัยเกาะมหาสนุก</title>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{--navy:#10213f;--blue:#2563eb;--sky:#eaf6ff;--card:#fff;--line:#cbdff4;--ink:#15243a;--muted:#60758f;--green:#16804f;--red:#c43737;--amber:#a76800}
@@ -25,7 +25,7 @@ button,input,select,textarea{font:inherit}.hidden{display:none!important}
 </head>
 <body>
 <header class="topbar">
-  <div><h1>⚙️ Admin จัดการโจทย์</h1><small>Sky Island — เลือก เพิ่ม แก้ไข และปิดใช้งานโจทย์</small></div>
+  <div><h1>⚙️ Admin จัดการโจทย์</h1><small>ผจญภัยเกาะมหาสนุก — เลือก เพิ่ม แก้ไข และปิดใช้งานโจทย์</small></div>
   <div class="top-actions">
     <a class="btn light" id="game-link" href="part2.html">🎮 กลับเข้าเกม</a>
     <button class="btn light hidden" id="logout-btn">ออกจากระบบ</button>
@@ -314,7 +314,7 @@ button,input,select,textarea{font:inherit}.hidden{display:none!important}
   });
 
   el('export-btn').addEventListener('click', () => {
-    const payload = JSON.stringify({app:'Sky Island',version:2,exportedAt:new Date().toISOString(),questions},null,2);
+    const payload = JSON.stringify({app:'ผจญภัยเกาะมหาสนุก',version:2,exportedAt:new Date().toISOString(),questions},null,2);
     const blob = new Blob([payload],{type:'application/json'});
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
