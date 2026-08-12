@@ -1,5 +1,5 @@
 /****************************************************************************************
- *  เกาะลอยฟ้า ผจญภัยทศนิยม — Google Apps Script (Code.gs)
+ *  ผจญภัยเกาะมหาสนุก — Google Apps Script (Code.gs)
  *  ------------------------------------------------------------------------------------
  *  ไฟล์นี้ทำหน้าที่ 4 อย่าง:
  *    1) doGet()        -> เสิร์ฟหน้าเกม (ไฟล์ part2.html) ให้เปิดผ่านลิงก์เว็บแอปได้
@@ -29,7 +29,7 @@ function doGet(e) {
     return ContentService.createTextOutput(json).setMimeType(ContentService.MimeType.JSON);
   }
   const page = e && e.parameter && e.parameter.page === 'admin' ? 'admin' : 'part2';
-  const title = page === 'admin' ? 'Admin จัดการโจทย์ — Sky Island' : 'เกาะลอยฟ้า ผจญภัยทศนิยม';
+  const title = page === 'admin' ? 'Admin จัดการโจทย์ — ผจญภัยเกาะมหาสนุก' : 'ผจญภัยเกาะมหาสนุก';
   return HtmlService.createHtmlOutputFromFile(page)
     .setTitle(title)
     .addMetaTag('viewport', 'width=device-width, initial-scale=1.0')
