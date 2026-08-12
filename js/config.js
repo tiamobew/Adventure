@@ -3,5 +3,5 @@
  * ตัวอย่าง: webAppUrl: 'https://script.google.com/macros/s/XXXXXXXX/exec'
  */
 window.SKYISLAND_CONFIG = {
-  webAppUrl: ''
+  webAppUrl: 'https://script.google.com/macros/s/AKfycbxlW1rkljAUd6v78jows6vaUZYSWNdnGWaYmBZlmSkIVfABR1pH_GgeOYP8R67mKIB0eA/exec'
 };

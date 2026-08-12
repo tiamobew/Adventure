@@ -239,5 +239,5 @@ function saveRecord(data) {
  */
 function setupQuestionSheet() {
   writeQuestionBank_(defaultQuestionBank_());
-  SpreadsheetApp.getUi().alert('สร้างชีท "โจทย์" ตัวอย่างเรียบร้อยแล้ว ✅\nแก้ไข/เพิ่มโจทย์ในแท็บ "โจทย์" ได้เลย');
+  return { ok: true, message: 'สร้างชีทโจทย์ตัวอย่างเรียบร้อยแล้ว' };
 }
