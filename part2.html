@@ -490,11 +490,40 @@ function loadQuestions(){
       .withFailureHandler(function(err){ console.warn('โหลดโจทย์จากชีทไม่ได้', err); })
       .getQuestions();
   } else if(WEBAPP_URL){
-    fetch(WEBAPP_URL + '?action=questions&t=' + Date.now(), {cache:'no-store'})
-      .then(function(r){ return r.json(); })
-      .then(ingestQuestions)
-      .catch(function(err){ console.warn('โหลดโจทย์จากชีทไม่ได้', err); });
+    loadQuestionsJsonp();
   }
+}
+
+function loadQuestionsJsonp(){
+  const callbackName = '__skyIslandQuestions_' + Date.now() + '_' + Math.floor(Math.random()*100000);
+  const script = document.createElement('script');
+  let finished = false;
+  const cleanup = function(){
+    if(script.parentNode) script.parentNode.removeChild(script);
+    try{ delete window[callbackName]; }catch(_){ window[callbackName] = undefined; }
+  };
+  const timer = setTimeout(function(){
+    if(finished) return;
+    finished = true;
+    cleanup();
+    console.warn('โหลดโจทย์จากชีทหมดเวลา');
+  }, 12000);
+  window[callbackName] = function(rows){
+    if(finished) return;
+    finished = true;
+    clearTimeout(timer);
+    ingestQuestions(rows);
+    cleanup();
+  };
+  script.onerror = function(){
+    if(finished) return;
+    finished = true;
+    clearTimeout(timer);
+    cleanup();
+    console.warn('โหลดโจทย์จากชีทไม่ได้');
+  };
+  script.src = WEBAPP_URL + '?action=questions&callback=' + encodeURIComponent(callbackName) + '&t=' + Date.now();
+  document.head.appendChild(script);
 }
 
 // อุปกรณ์ที่เปิดหน้าเกมค้างไว้จะได้รับโจทย์ใหม่อัตโนมัติภายใน 1 นาที

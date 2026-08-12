@@ -19,9 +19,14 @@ const SHEET_SCORES_NAME    = 'คะแนน';
  */
 function doGet(e) {
   if (e && e.parameter && e.parameter.action === 'questions') {
-    return ContentService
-      .createTextOutput(JSON.stringify(getQuestions()))
-      .setMimeType(ContentService.MimeType.JSON);
+    const json = JSON.stringify(getQuestions());
+    const callback = String(e.parameter.callback || '').replace(/[^a-zA-Z0-9_.$]/g, '');
+    if (callback) {
+      return ContentService
+        .createTextOutput(callback + '(' + json + ');')
+        .setMimeType(ContentService.MimeType.JAVASCRIPT);
+    }
+    return ContentService.createTextOutput(json).setMimeType(ContentService.MimeType.JSON);
   }
   const page = e && e.parameter && e.parameter.page === 'admin' ? 'admin' : 'part2';
   const title = page === 'admin' ? 'Admin จัดการโจทย์ — Sky Island' : 'เกาะลอยฟ้า ผจญภัยทศนิยม';
