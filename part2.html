@@ -453,7 +453,11 @@ let questionsLoaded = false;
 
 function gasReady(){ return typeof google!=='undefined' && google.script && google.script.run; }
 
-if(gasReady()) document.getElementById('adminLink').href = '?page=admin';
+if(gasReady()) {
+  document.getElementById('adminLink').href = '?page=admin';
+} else if(WEBAPP_URL) {
+  document.getElementById('adminLink').href = WEBAPP_URL + '?page=admin';
+}
 
 // แปลงชื่อระดับให้เป็นค่ามาตรฐาน (รองรับทั้งไทยและอังกฤษ)
 function normalizeTier(t){
