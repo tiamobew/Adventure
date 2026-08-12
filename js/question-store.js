@@ -1,4 +1,4 @@
-/* คลังโจทย์ที่แก้ไขได้สำหรับ Sky Island (บันทึกใน localStorage) */
+/* คลังโจทย์ที่แก้ไขได้สำหรับผจญภัยเกาะมหาสนุก (บันทึกใน localStorage) */
 (function () {
   'use strict';
 
@@ -156,7 +156,7 @@
 
   function exportJson() {
     return JSON.stringify({
-      app: 'Sky Island',
+      app: 'ผจญภัยเกาะมหาสนุก',
       version: 1,
       exportedAt: new Date().toISOString(),
       questions: load()
