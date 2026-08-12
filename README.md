@@ -5,11 +5,13 @@
 - **เกมผจญภัยทศนิยม 3D (หลัก):** https://tiamobew.github.io/skyisland/
 - **เกมกระดานเดิม:** https://tiamobew.github.io/skyisland/board.html
 
+การซิงก์โจทย์ทุกอุปกรณ์ใช้ Google Sheet เป็นคลังกลาง: Deploy `apps-script/Code.gs`, `part2.html` และ `admin.html` เป็น Google Apps Script Web app แล้วใส่ URL ที่ได้ใน `js/config.js` รายละเอียดอยู่ใน [`docs/google-sheet-setup.md`](docs/google-sheet-setup.md)
+
 > เปิดใช้ GitHub Pages ครั้งแรก: ไปที่ repo → **Settings → Pages → Build and deployment**
 > เลือก **Source: Deploy from a branch**, **Branch: `main` / `(root)`** แล้ว Save รอสักครู่ให้ลิงก์พร้อม
 
 ไฟล์เกมผจญภัย (`part2.html`) เป็น HTML ไฟล์เดียวจบ ทำงานได้ทันทีบน static hosting
-(โหลด Three.js จาก CDN ไม่ต้อง build) — ดูวิธีเชื่อม Google Sheet ได้ใน `คู่มือ-Google-Sheet.md`
+(โหลด Three.js จาก CDN ไม่ต้อง build) — ดูวิธีเชื่อม Google Sheet ได้ใน [`docs/google-sheet-setup.md`](docs/google-sheet-setup.md)
 
 ---
 
