@@ -219,7 +219,7 @@
     </div>
     <div id="progressBox" class="hud-card hidden"></div>
     <div id="statsBox" class="hud-card hidden">
-      🪙 <span id="scoreVal">0</span> &nbsp; ⏱️ <span id="timerVal">00:00</span>
+      🏝️ <span id="stageVal">ด่าน 1/3</span> &nbsp; 🪙 <span id="scoreVal">0</span> &nbsp; ⏱️ <span id="timerVal">00:00</span>
     </div>
   </div>
 
@@ -267,7 +267,7 @@
     <div class="overlay-card">
       <div class="emoji-big">🏝️✨</div>
       <h1>ผจญภัยเกาะมหาสนุก</h1>
-      <p class="hint-line">เดินด้วยลูกศร/WASD หรือ <b>คลิกเมาส์ไปยังจุดที่ต้องการ</b> · เดินเข้าใกล้มอนสเตอร์เพื่อเริ่มโจทย์<br>ตอบเลขทศนิยมให้ถูกเพื่อปราบมันไปทีละตัว!</p>
+      <p class="hint-line">ตะลุย 3 ด่าน · ด่านละ 10 ตัว: ง่าย 3 ปานกลาง 3 ยาก 3 และบอส 1<br>เดินด้วยลูกศร/WASD หรือ <b>คลิกจุดหมาย</b> · เข้าใกล้มอนสเตอร์เพื่อเริ่มโจทย์!</p>
       <input type="text" id="nameInput" maxlength="16" placeholder="ใส่ชื่อผู้เล่น..." value="นักผจญภัย">
       <div class="color-label">เลือกสีตัวละคร 🎨</div>
       <div id="colorPicker">
@@ -358,14 +358,17 @@ const TIER_INFO = {
   hard:   { label:'ยาก',    color:0x9b4dff, points:30 },    // ม่วงสด
   boss:   { label:'บอส',   color:0xff2e63, points:100 }     // แดงชมพูสด
 };
-// ลำดับมอนสเตอร์ตลอดเกม: ง่าย 6 → ปานกลาง 1 → ยาก 6 → บอส 1 (รวม 14 ตัว)
-const SEQUENCE = [
-  ...Array(6).fill('easy'),
-  'medium',
-  ...Array(6).fill('hard'),
+// เกมมี 3 ด่าน ด่านละ 10 ตัว: ง่าย 3 → ปานกลาง 3 → ยาก 3 → บอส 1 (รวม 30 ตัว)
+const STAGE_COUNT = 3;
+const STAGE_SEQUENCE = [
+  ...Array(3).fill('easy'),
+  ...Array(3).fill('medium'),
+  ...Array(3).fill('hard'),
   'boss'
 ];
-const BENCHMARK_SECONDS = 300;         // ใช้คิดโบนัสเวลาตอนจบเกม (ยิ่งเร็วกว่านี้ยิ่งได้โบนัสเยอะ)
+const MONSTERS_PER_STAGE = STAGE_SEQUENCE.length;
+const SEQUENCE = Array.from({length:STAGE_COUNT},()=>STAGE_SEQUENCE).flat();
+const BENCHMARK_SECONDS = 600;         // เกณฑ์โบนัสสำหรับ 3 ด่าน รวม 30 ตัว
 const BOUNDS = { x:38, zMin:-38, zMax:38 };    // แผนที่กว้าง เดินสำรวจได้ทั่วบริเวณ
 const GROUND_Y = 0;                            // ตัวละครยืนบนพื้นดิน (ไม่ลอยแล้ว)
 
@@ -845,8 +848,67 @@ function buildCuteCharacter(opt){
   };
 }
 
+/* ---------- ผู้เล่นมาสคอตตาโต: ทรงอวบ จุกใบไม้ แก้มชมพู และกะพริบตา ---------- */
+function makeMascotMouthTexture(mood){
+  const cnv=document.createElement('canvas'); cnv.width=128; cnv.height=64;
+  const ctx=cnv.getContext('2d'); ctx.clearRect(0,0,128,64);
+  ctx.strokeStyle='#352b3e'; ctx.lineWidth=8; ctx.lineCap='round'; ctx.beginPath();
+  if(mood==='sad') ctx.arc(64,52,22,Math.PI*1.18,Math.PI*1.82,true);
+  else ctx.arc(64,18,22,Math.PI*.16,Math.PI*.84,false);
+  ctx.stroke(); return new THREE.CanvasTexture(cnv);
+}
+function buildMascotPlayer(opt){
+  const g=new THREE.Group();
+  const bodyMat=new THREE.MeshStandardMaterial({color:opt.color,roughness:.46});
+  const inkMat=new THREE.MeshStandardMaterial({color:0x352b3e,roughness:.72});
+  const whiteMat=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.28});
+  const leafMat=new THREE.MeshStandardMaterial({color:0x00a896,roughness:.55});
+  const blushMat=new THREE.MeshStandardMaterial({color:0xff4f91,roughness:.5});
+  const orb=(r,x,y,z,mat,sx=1,sy=1,sz=1)=>{
+    const mesh=new THREE.Mesh(new THREE.SphereGeometry(r,24,18),mat);
+    mesh.position.set(x,y,z); mesh.scale.set(sx,sy,sz); mesh.castShadow=true; mesh.receiveShadow=true; g.add(mesh); return mesh;
+  };
+  const s=opt.size;
+  const body=orb(.58*s,0,.64*s,0,bodyMat,.78,1.08,.72);
+  const legL=orb(.14*s,-.23*s,.12*s,.03*s,inkMat,.8,1.15,.85);
+  const legR=orb(.14*s,.23*s,.12*s,.03*s,inkMat,.8,1.15,.85);
+  const armL=orb(.13*s,-.55*s,.62*s,0,inkMat,.72,1.35,.72);
+  const armR=orb(.13*s,.55*s,.62*s,0,inkMat,.72,1.35,.72);
+  armL.rotation.z=-.48; armR.rotation.z=.48;
+  const eyes=[];
+  [-1,1].forEach(side=>{
+    const white=orb(.27*s,side*.21*s,.82*s,.43*s,whiteMat,.88,1.12,.36);
+    const pupil=orb(.145*s,side*.19*s,.80*s,.625*s,inkMat,.75,1.08,.3);
+    const shine=orb(.042*s,side*.16*s,.855*s,.715*s,new THREE.MeshBasicMaterial({color:0xffffff}),1,1,.25);
+    white.userData.baseY=1.12; pupil.userData.baseY=1.08; eyes.push({white,pupil,shine});
+  });
+  const cheekL=orb(.075*s,-.35*s,.58*s,.58*s,blushMat,1.35,.62,.24);
+  const cheekR=orb(.075*s,.35*s,.58*s,.58*s,blushMat,1.35,.62,.24);
+  const happyTex=makeMascotMouthTexture('happy'), sadTex=makeMascotMouthTexture('sad');
+  const face=new THREE.Mesh(new THREE.PlaneGeometry(.34*s,.18*s),new THREE.MeshBasicMaterial({map:happyTex,transparent:true,depthWrite:false}));
+  face.position.set(0,.47*s,.66*s); g.add(face);
+  const stem=new THREE.Mesh(new THREE.CylinderGeometry(.045*s,.065*s,.28*s,10),leafMat);
+  stem.position.set(0,1.28*s,0); stem.rotation.z=-.12; stem.castShadow=true; g.add(stem);
+  const leafL=orb(.17*s,-.09*s,1.42*s,0,leafMat,.55,1.12,.45);
+  const leafR=orb(.17*s,.11*s,1.43*s,0,leafMat,.55,1.12,.45);
+  leafL.rotation.z=.72; leafR.rotation.z=-.72;
+  let mood='happy';
+  return {group:g,body,face,legL,legR,armL,armR,glow:null,baseColor:opt.color,
+    setMood(next){mood=next;face.material.map=next==='sad'?sadTex:happyTex;face.material.needsUpdate=true;eyes.forEach(e=>e.pupil.position.y=s*(next==='sad'?.76:.80));},
+    setBodyColor(hex){bodyMat.color.set(hex);}, setColor(hex){this.baseColor=hex;bodyMat.color.set(hex);},
+    animate(t,moving){
+      const energy=moving?2.1:1;
+      armL.rotation.z=-.48+Math.sin(t*(moving?9:2.4))*.11*energy;
+      armR.rotation.z=.48-Math.sin(t*(moving?9:2.4))*.11*energy;
+      leafL.rotation.z=.72+Math.sin(t*2.1)*.06; leafR.rotation.z=-.72-Math.sin(t*2.1)*.06;
+      const blink=Math.pow(Math.max(0,Math.sin(t*.78)),42);
+      eyes.forEach(e=>{e.white.scale.y=e.white.userData.baseY*(1-blink*.88);e.pupil.scale.y=e.pupil.userData.baseY*(1-blink*.9);e.shine.visible=blink<.55;});
+      cheekL.material.opacity=cheekR.material.opacity=mood==='sad'?.5:1;
+    }};
+}
+
 /* ---------- player (สีเหลืองครีมอบอุ่น) ---------- */
-const player = buildCuteCharacter({ color:0xffe08a, size:1.15, glow:true });
+const player = buildMascotPlayer({ color:0xffd23f, size:1.28 });
 player.group.position.set(0, GROUND_Y, 2.2);
 scene.add(player.group);
 
@@ -862,65 +924,118 @@ function setPlayerName(name){
   if(nameTag){ player.group.remove(nameTag); }
   nameTag = makeTextSprite(playerName, '#5b4b66');
   nameTag.scale.set(1.6,0.65,1);
-  nameTag.position.set(0, 1.55, 0);
+  nameTag.position.set(0, 2.0, 0);
   player.group.add(nameTag);
 }
 setPlayerName(playerName);
 
-/* ---------- monster builders: ใช้โครงเดียวกัน แต่งแต้มลักษณะต่างกันตามระดับ ---------- */
-function decorate(m, extras){ extras.forEach(e=>m.group.add(e)); }
-function buildEasyMonster(){
-  const m = buildCuteCharacter({ color:TIER_INFO.easy.color, size:1.05 });
-  const leaf = new THREE.Mesh(new THREE.ConeGeometry(0.2,0.44,6), new THREE.MeshStandardMaterial({color:0xffd23f}));
-  leaf.position.set(0, m.body.position.y+0.58, 0);
-  decorate(m, [leaf]);
-  m.kind='easy';
+/* ---------- Monster Pack 9 แบบ: สีสดอิ่มตัว ไม่ใช้พาสเทล ---------- */
+const MONSTER_PALETTE = [0x7b2cbf,0xff006e,0xffa000,0x0096ff,0xe60026,0x00a896,0xffc400,0x39b000,0xc7e500];
+const MONSTER_INK = 0x190f21;
+
+function monsterMesh(parent, geometry, material, x, y, z){
+  const mesh = new THREE.Mesh(geometry, material);
+  mesh.position.set(x||0,y||0,z||0); mesh.castShadow=true; mesh.receiveShadow=true;
+  parent.add(mesh); return mesh;
+}
+function monsterOrb(parent, r, x, y, z, material, sx, sy, sz){
+  const mesh = monsterMesh(parent,new THREE.SphereGeometry(r,20,16),material,x,y,z);
+  mesh.scale.set(sx||1,sy||1,sz||1); return mesh;
+}
+function monsterCone(parent, r, h, x, y, z, material, rotZ){
+  const mesh = monsterMesh(parent,new THREE.ConeGeometry(r,h,10),material,x,y,z);
+  mesh.rotation.z=rotZ||0; return mesh;
+}
+function monsterTube(parent, points, radius, material){
+  const curve = new THREE.CatmullRomCurve3(points.map(p=>new THREE.Vector3(p[0],p[1],p[2])));
+  return monsterMesh(parent,new THREE.TubeGeometry(curve,18,radius,7,false),material,0,0,0);
+}
+function monsterBase(color, size, boxy){
+  const g=new THREE.Group(), bodyMat=new THREE.MeshStandardMaterial({color,roughness:.48});
+  const inkMat=new THREE.MeshStandardMaterial({color:MONSTER_INK,roughness:.72});
+  const geometry=boxy ? new THREE.BoxGeometry(1.12*size,1.12*size,.72*size) : new THREE.SphereGeometry(.58*size,24,18);
+  const body=monsterMesh(g,geometry,bodyMat,0,.62*size,0);
+  if(!boxy) body.scale.set(1,.94,.72);
+  const footR=.13*size;
+  const legL=monsterOrb(g,footR,-.25*size,.10*size,.03*size,inkMat,.8,1.15,.85);
+  const legR=monsterOrb(g,footR,.25*size,.10*size,.03*size,inkMat,.8,1.15,.85);
+  const armL=monsterOrb(g,.12*size,-.62*size,.68*size,0,inkMat,.72,1.35,.72);
+  const armR=monsterOrb(g,.12*size,.62*size,.68*size,0,inkMat,.72,1.35,.72);
+  armL.rotation.z=-.45; armR.rotation.z=.45;
+  const m={group:g,body,face:null,legL,legR,armL,armR,glow:null,baseColor:color,eyes:[],wobblers:[],
+    setMood(){}, setBodyColor(hex){bodyMat.color.set(hex);}, setColor(hex){this.baseColor=hex;bodyMat.color.set(hex);},
+    animate(t,near){
+      const blink=Math.pow(Math.max(0,Math.sin(t*.72+this.variant)),46);
+      this.eyes.forEach(e=>{e.white.scale.y=e.white.userData.baseY*(1-blink*.84);e.pupil.scale.y=Math.max(.08,e.pupil.userData.baseY*(1-blink*.9));e.shine.visible=blink<.55;});
+      this.wobblers.forEach((w,i)=>{w.rotation.z=w.userData.baseZ+Math.sin(t*(near?5:2.2)+i)*.07;});
+    }};
   return m;
 }
-function buildMediumMonster(){
-  const m = buildCuteCharacter({ color:TIER_INFO.medium.color, size:1.4 });
-  const hornMat = new THREE.MeshStandardMaterial({color:0xffd28a});
-  const hL = new THREE.Mesh(new THREE.ConeGeometry(0.1,0.32,6), hornMat);
-  hL.position.set(-0.26, m.body.position.y+0.55, 0); hL.rotation.z = 0.3;
-  const hR = hL.clone(); hR.position.x = 0.26; hR.rotation.z = -0.3;
-  decorate(m, [hL,hR]);
-  m.kind='medium';
-  return m;
+function monsterEye(m,x,y,z,scale,iris){
+  const whiteMat=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.25});
+  const irisMat=new THREE.MeshStandardMaterial({color:iris||0x00a896,roughness:.35});
+  const white=monsterOrb(m.group,.27*scale,x,y,z,whiteMat,.9,1.08,.36);
+  const pupil=monsterOrb(m.group,.14*scale,x,y-.01*scale,z+.22*scale,irisMat,.72,1,.27);
+  const shine=monsterOrb(m.group,.04*scale,x-.03*scale,y+.06*scale,z+.30*scale,new THREE.MeshBasicMaterial({color:0xffffff}),1,1,.2);
+  white.userData.baseY=1.08; pupil.userData.baseY=1; m.eyes.push({white,pupil,shine});
 }
-function buildHardMonster(){
-  const m = buildCuteCharacter({ color:TIER_INFO.hard.color, size:1.7 });
-  const spikeMat = new THREE.MeshStandardMaterial({color:0x6d2fd6});
-  const sL = new THREE.Mesh(new THREE.ConeGeometry(0.14,0.46,6), spikeMat);
-  sL.position.set(-0.82, m.body.position.y+0.05, 0); sL.rotation.z = 1.0;
-  const sR = sL.clone(); sR.position.x = 0.82; sR.rotation.z = -1.0;
-  const sT = new THREE.Mesh(new THREE.ConeGeometry(0.14,0.46,6), spikeMat);
-  sT.position.set(0, m.body.position.y+0.9, 0);
-  decorate(m, [sL,sR,sT]);
-  m.kind='hard';
-  return m;
+function monsterSmile(m,y,z,width){
+  monsterTube(m.group,[[-width,y,z],[0,y-.12,z+.035],[width,y,z]],.04,new THREE.MeshStandardMaterial({color:MONSTER_INK,roughness:.7}));
 }
-function buildBossMonster(){
-  const m = buildCuteCharacter({ color:TIER_INFO.boss.color, size:2.7, glow:true });
-  const crownMat = new THREE.MeshStandardMaterial({color:0xffd23f});
-  [-0.42,0,0.42].forEach(dx=>{
-    const spike = new THREE.Mesh(new THREE.ConeGeometry(0.16,0.5,6), crownMat);
-    spike.position.set(dx, m.body.position.y+0.95, 0);
-    m.group.add(spike);
-  });
-  const wingMat = new THREE.MeshStandardMaterial({color:0xff9ec2, transparent:true, opacity:0.88, side:THREE.DoubleSide});
-  const wingL = new THREE.Mesh(new THREE.SphereGeometry(0.6,12,10), wingMat);
-  wingL.scale.set(0.25,1,1.35);
-  wingL.position.set(-1.4, m.body.position.y+0.15, -0.15); wingL.rotation.y = 0.4;
-  const wingR = wingL.clone(); wingR.position.x = 1.4; wingR.rotation.y = -0.4;
-  decorate(m, [wingL,wingR]);
-  m.kind='boss';
-  return m;
+function monsterTooth(m,x,y,z,size){
+  const tooth=monsterCone(m.group,.075*size,.18*size,x,y,z,new THREE.MeshStandardMaterial({color:0xffffff}));
+  tooth.rotation.z=Math.PI;
+}
+function buildMonsterVariant(variant,tier){
+  const size={easy:1.05,medium:1.28,hard:1.48,boss:1.9}[tier]||1.1;
+  const s=size, color=MONSTER_PALETTE[variant], accent=new THREE.MeshStandardMaterial({color:0xffc400,roughness:.55});
+  let m;
+  if(variant===0){ // ไซคลอปส์มีหนวดกระดิ่ง
+    m=monsterBase(color,s,false); monsterEye(m,0,.78*s,.47*s,1.22*s,0xffc400); monsterSmile(m,.48*s,.57*s,.25*s);
+    monsterTube(m.group,[[.12*s,1.1*s,0],[.35*s,1.55*s,0],[.62*s,1.5*s,0]],.055*s,new THREE.MeshStandardMaterial({color:MONSTER_INK}));
+    monsterOrb(m.group,.17*s,.69*s,1.49*s,0,accent,1.2,.75,.8);
+    for(let i=0;i<4;i++) monsterCone(m.group,.09*s,.25*s,.57*s,(1.05-i*.23)*s,-.02*s,accent,-Math.PI/2);
+  }else if(variant===1){ // แมวสามตา
+    m=monsterBase(color,s,false); monsterCone(m.group,.24*s,.52*s,-.38*s,1.18*s,0,m.body.material,-.2); monsterCone(m.group,.24*s,.52*s,.38*s,1.18*s,0,m.body.material,.2);
+    [[-.22,.73],[.22,.73],[0,1.02]].forEach(p=>monsterEye(m,p[0]*s,p[1]*s,.46*s,.66*s,0x00a896)); monsterSmile(m,.43*s,.56*s,.24*s);
+    const tail=monsterTube(m.group,[[.52*s,.63*s,0],[.88*s,.72*s,0],[.82*s,1.05*s,0]],.055*s,new THREE.MeshStandardMaterial({color:MONSTER_INK}));m.wobblers.push(tail);
+  }else if(variant===2){ // ลายจุดใส่หมวก
+    m=monsterBase(color,s,false); const faceMat=new THREE.MeshStandardMaterial({color:0xffe600,roughness:.5}); monsterOrb(m.group,.4*s,0,.62*s,.48*s,faceMat,1.18,.85,.25);
+    [[-.26,.92,.43,.13],[.29,1.02,.39,.11],[.37,.48,.45,.13]].forEach(p=>monsterOrb(m.group,p[3]*s,p[0]*s,p[1]*s,p[2]*s,new THREE.MeshStandardMaterial({color:0xff5a00}),1,.6,.2));
+    monsterEye(m,-.16*s,.70*s,.63*s,.48*s,MONSTER_INK); monsterEye(m,.16*s,.70*s,.63*s,.48*s,MONSTER_INK); monsterSmile(m,.50*s,.70*s,.14*s);
+    monsterMesh(m.group,new THREE.CylinderGeometry(.3*s,.33*s,.35*s,12),new THREE.MeshStandardMaterial({color:0x39b000}),0,1.35*s,0);
+    monsterMesh(m.group,new THREE.CylinderGeometry(.51*s,.51*s,.06*s,16),new THREE.MeshStandardMaterial({color:0x00a896}),0,1.19*s,0);
+  }else if(variant===3){ // ขนฟูใส่หูฟัง
+    m=monsterBase(color,s,false); for(let i=0;i<12;i++){const a=i/12*Math.PI*2;monsterOrb(m.group,.22*s,Math.cos(a)*.48*s,.64*s+Math.sin(a)*.48*s,0,m.body.material,1,1,.7);}
+    monsterEye(m,-.2*s,.75*s,.47*s,.68*s);monsterEye(m,.2*s,.75*s,.47*s,.68*s);monsterSmile(m,.46*s,.56*s,.23*s);
+    const band=monsterMesh(m.group,new THREE.TorusGeometry(.54*s,.055*s,9,25,Math.PI),new THREE.MeshStandardMaterial({color:0x4e3265}),0,.82*s,0);band.rotation.z=Math.PI;
+    monsterOrb(m.group,.17*s,-.53*s,.72*s,0,new THREE.MeshStandardMaterial({color:0xff006e}),.6,1,.7);monsterOrb(m.group,.17*s,.53*s,.72*s,0,new THREE.MeshStandardMaterial({color:0xff006e}),.6,1,.7);
+  }else if(variant===4){ // กล่องแดงถือไอศกรีม
+    m=monsterBase(color,s,true);monsterEye(m,-.25*s,.78*s,.43*s,.73*s);monsterEye(m,.25*s,.78*s,.43*s,.73*s);monsterSmile(m,.45*s,.49*s,.3*s);monsterTooth(m,-.17*s,.44*s,.56*s,s);monsterTooth(m,.17*s,.44*s,.56*s,s);
+    const arm=monsterTube(m.group,[[-.54*s,.65*s,0],[-.78*s,1.0*s,0],[-.82*s,1.28*s,0]],.055*s,new THREE.MeshStandardMaterial({color:0xff5a00}));m.wobblers.push(arm);
+    const cone=monsterCone(m.group,.2*s,.48*s,-.82*s,1.39*s,0,new THREE.MeshStandardMaterial({color:0xd88a25}),Math.PI);monsterOrb(m.group,.22*s,-.82*s,1.61*s,0,new THREE.MeshStandardMaterial({color:0x0096ff}),1,1,.75);
+  }else if(variant===5){ // ยิ้มกว้างมีเขายาว
+    m=monsterBase(color,s,false);monsterEye(m,-.21*s,.78*s,.48*s,.62*s,0x2456a6);monsterEye(m,.21*s,.78*s,.48*s,.62*s,0x2456a6);monsterSmile(m,.42*s,.58*s,.38*s);
+    [-.27,-.09,.09,.27].forEach(x=>monsterTooth(m,x*s,.45*s,.66*s,s));
+    const hornMat=new THREE.MeshStandardMaterial({color:0x6a4770});const h1=monsterTube(m.group,[[-.48*s,.82*s,0],[-.78*s,1.1*s,0],[-.92*s,1.52*s,0]],.095*s,hornMat);const h2=monsterTube(m.group,[[.48*s,.82*s,0],[.78*s,1.1*s,0],[.92*s,1.52*s,0]],.095*s,hornMat);m.wobblers.push(h1,h2);
+  }else if(variant===6){ // หนวดหลายเส้น
+    m=monsterBase(color,s,true);monsterEye(m,-.24*s,.76*s,.43*s,.64*s,0xe60026);monsterEye(m,.24*s,.76*s,.43*s,.64*s,0xe60026);monsterSmile(m,.43*s,.50*s,.18*s);
+    for(let i=0;i<5;i++){const x=(i-2)*.18*s;const stalk=monsterTube(m.group,[[x,1.16*s,0],[x+(i-2)*.025*s,1.54*s,0]],.04*s,new THREE.MeshStandardMaterial({color:MONSTER_INK}));monsterOrb(m.group,.105*s,x+(i-2)*.025*s,1.61*s,0,new THREE.MeshStandardMaterial({color:0xff5a00}));m.wobblers.push(stalk);}
+  }else if(variant===7){ // เขาสั้นและแขนยาว
+    m=monsterBase(color,s,false);m.body.scale.set(1.15,.74,.7);monsterEye(m,-.23*s,.72*s,.46*s,.62*s);monsterEye(m,.23*s,.72*s,.46*s,.62*s);monsterSmile(m,.40*s,.54*s,.24*s);
+    monsterCone(m.group,.12*s,.36*s,-.28*s,1.15*s,0,m.body.material);monsterCone(m.group,.12*s,.36*s,.28*s,1.15*s,0,m.body.material);
+    m.armL.visible=false;m.armR.visible=false;const longMat=new THREE.MeshStandardMaterial({color:0x76b900});const a1=monsterTube(m.group,[[-.56*s,.72*s,0],[-.92*s,.68*s,0],[-1.03*s,.28*s,0]],.08*s,longMat);const a2=monsterTube(m.group,[[.56*s,.72*s,0],[.92*s,.68*s,0],[1.03*s,.28*s,0]],.08*s,longMat);m.wobblers.push(a1,a2);
+  }else{ // บอสกระต่ายตาเดียวถือดอกไม้
+    m=monsterBase(color,s,true);monsterEye(m,0,.78*s,.43*s,1.02*s,0x00a896);
+    const earMat=new THREE.MeshStandardMaterial({color:0x00b8d4});const e1=monsterCone(m.group,.17*s,.65*s,-.18*s,1.48*s,0,earMat,-.22);const e2=monsterCone(m.group,.17*s,.65*s,.18*s,1.48*s,0,earMat,.22);m.wobblers.push(e1,e2);
+    monsterTube(m.group,[[.52*s,.42*s,0],[.75*s,.30*s,0]],.035*s,new THREE.MeshStandardMaterial({color:MONSTER_INK}));
+    for(let i=0;i<5;i++){const a=i/5*Math.PI*2;monsterOrb(m.group,.08*s,.81*s+Math.cos(a)*.12*s,.32*s+Math.sin(a)*.12*s,0,new THREE.MeshStandardMaterial({color:0xff006e}));}
+    monsterTube(m.group,[[.86*s,.22*s,0],[.88*s,.03*s,0]],.03*s,new THREE.MeshStandardMaterial({color:0x39b000}));
+  }
+  m.variant=variant; m.kind='monster-'+(variant+1); return m;
 }
 function buildMonsterByTier(tier){
-  if(tier==='easy') return buildEasyMonster();
-  if(tier==='medium') return buildMediumMonster();
-  if(tier==='hard') return buildHardMonster();
-  return buildBossMonster();
+  return buildMonsterVariant(Math.max(0,monsterIdx)%9,tier);
 }
 
 /* ============================== DECIMAL PROBLEM GENERATOR ============================== */
@@ -985,11 +1100,15 @@ const livesBox = el('livesBox'), statsBox = el('statsBox'), progressBox = el('pr
 const questionBox = el('questionBox'), keypad = el('keypad');
 const tierTag = el('tierTag'), eqText = el('eqText'), eqNote = el('eqNote');
 const answerText = el('answerText'), toastEl = el('toast');
-const scoreVal = el('scoreVal'), timerVal = el('timerVal');
+const scoreVal = el('scoreVal'), timerVal = el('timerVal'), stageVal = el('stageVal');
+
+function getStageNumber(){
+  return Math.min(STAGE_COUNT,Math.floor(Math.max(0,monsterIdx)/MONSTERS_PER_STAGE)+1);
+}
 
 function buildProgressDots(){
   progressBox.innerHTML = '';
-  SEQUENCE.forEach(tier=>{
+  STAGE_SEQUENCE.forEach(tier=>{
     const d = document.createElement('div');
     d.className = 'pdot ' + tier;
     progressBox.appendChild(d);
@@ -997,10 +1116,12 @@ function buildProgressDots(){
 }
 function updateProgressDots(){
   const dots = progressBox.children;
+  const localIdx = Math.max(0,monsterIdx)%MONSTERS_PER_STAGE;
+  stageVal.textContent = `ด่าน ${getStageNumber()}/${STAGE_COUNT}`;
   for(let i=0;i<dots.length;i++){
     dots[i].classList.remove('current');
-    dots[i].classList.toggle('done', i<monsterIdx);
-    if(i===monsterIdx) dots[i].classList.add('current');
+    dots[i].classList.toggle('done', i<localIdx);
+    if(i===localIdx) dots[i].classList.add('current');
   }
 }
 function updateHearts(){
@@ -1028,9 +1149,10 @@ function showToast(msg, cls){
 function renderQuestion(){
   const tier = SEQUENCE[monsterIdx];
   const info = TIER_INFO[tier];
-  const idxs = SEQUENCE.map((t,i)=>t===tier?i:-1).filter(i=>i>=0);
-  const posInTier = idxs.indexOf(monsterIdx)+1;
-  tierTag.textContent = `${info.label.toUpperCase()} · ${posInTier}/${idxs.length}  (มอนสเตอร์ตัวที่ ${monsterIdx+1}/${SEQUENCE.length})`;
+  const localIdx = monsterIdx%MONSTERS_PER_STAGE;
+  const posInTier = STAGE_SEQUENCE.slice(0,localIdx+1).filter(t=>t===tier).length;
+  const tierTotal = STAGE_SEQUENCE.filter(t=>t===tier).length;
+  tierTag.textContent = `ด่าน ${getStageNumber()}/${STAGE_COUNT} · ${info.label.toUpperCase()} ${posInTier}/${tierTotal} · ตัวที่ ${localIdx+1}/${MONSTERS_PER_STAGE}`;
   eqText.textContent = currentProblem.text;
   eqNote.textContent = currentProblem.steps>1 ? 'คิดตามลำดับ ทีละขั้นตอน จากซ้ายไปขวา' : '';
   answerBuffer = '';
@@ -1041,6 +1163,7 @@ function renderQuestion(){
 function resetWorld(){
   lives = 3; score = 0; monsterIdx = -1; elapsedMs = 0;
   updateHearts(); updateScore();
+  stageVal.textContent = `ด่าน 1/${STAGE_COUNT}`;
   timerVal.textContent = '00:00';
   buildProgressDots();
   player.group.position.set(0,GROUND_Y,2.2);
@@ -1073,6 +1196,10 @@ const PROXIMITY_THRESHOLD = 2.8;
 function nextMonster(){
   monsterIdx++;
   if(monsterIdx >= SEQUENCE.length){ return finishVictory(); }
+  if(monsterIdx>0 && monsterIdx%MONSTERS_PER_STAGE===0){
+    lives=3; updateHearts();
+    showToast(`เริ่มด่าน ${getStageNumber()} · ฟื้นพลังเต็ม!`,'good');
+  }
   updateProgressDots();
   const tier = SEQUENCE[monsterIdx];
   if(currentMonster){ scene.remove(currentMonster.group); }
@@ -1230,7 +1357,7 @@ function finishVictory(){
   const seconds = Math.floor(elapsedMs/1000);
   // โบนัสเวลา: ยิ่งใช้เวลาน้อยกว่าเกณฑ์ (300 วินาที) ยิ่งได้โบนัสมาก วินาทีละ 2 แต้ม
   const bonus = Math.max(0, Math.round((BENCHMARK_SECONDS-seconds))*2);
-  el('vGreeting').textContent = `เก่งมาก ${playerName}! คุณปราบมอนสเตอร์ทศนิยมได้ครบทุกตัว รวมถึงบอสใหญ่แห่งเกาะลอยฟ้า!`;
+  el('vGreeting').textContent = `เก่งมาก ${playerName}! คุณผ่านครบ ${STAGE_COUNT} ด่าน และปราบมอนสเตอร์ได้ทั้ง ${SEQUENCE.length} ตัวแล้ว!`;
   el('vBattle').textContent = score;
   el('vBonus').textContent = bonus;
   el('vTotal').textContent = score+bonus;
@@ -1408,6 +1535,7 @@ function animate(){
   const bobAmp = moving ? 0.09 : 0.05;
   const bobSpeed = moving ? 9 : 2.4;
   player.group.position.y = GROUND_Y + Math.sin(t*bobSpeed)*bobAmp;
+  if(player.animate) player.animate(t,moving);
 
   // --- กล้องเลื่อน+หมุนตามผู้เล่น (มุม camAngle ปรับได้) + ท้องฟ้า/แสงเงาเลื่อนตามด้วย ---
   const pxp = player.group.position.x, pzp = player.group.position.z;
@@ -1447,6 +1575,7 @@ function animate(){
     const ndx = player.group.position.x - m.homePos.x;
     const ndz = player.group.position.z - m.homePos.z;
     const nearMon = Math.hypot(ndx, ndz) < 8;
+    if(m.animate) m.animate(m.idleT, nearMon);
     const bobY = nearMon ? Math.abs(Math.sin(m.idleT*2.6))*0.55 : Math.sin(m.idleT*3)*0.07;
     m.group.position.y = GROUND_Y + bobY;
     if(nearMon && m.deathT<0){
