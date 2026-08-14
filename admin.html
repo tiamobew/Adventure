@@ -17,7 +17,7 @@ button,input,select,textarea{font:inherit}.hidden{display:none!important}
 .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px}.toolbar select{padding:10px;border:1px solid var(--line);border-radius:10px;background:#fff}.spacer{flex:1}
 .summary{display:grid;grid-template-columns:repeat(4,minmax(120px,1fr));gap:12px;margin-bottom:16px}.stat{padding:15px;border-radius:14px;background:#f3f9ff;border:1px solid var(--line)}.stat strong{display:block;font-size:27px}.stat span{color:var(--muted)}
 .notice{padding:11px 14px;border-radius:10px;margin-bottom:14px;background:#edf7ff;color:#174d79}.notice.ok{background:#e6f8ef;color:var(--green)}.notice.error{background:#ffe8e8;color:var(--red)}
-.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:14px}table{width:100%;border-collapse:collapse;min-width:820px}th,td{padding:12px;border-bottom:1px solid #e2edf7;text-align:left;vertical-align:top}th{background:#edf6ff;color:#31516f;position:sticky;top:0}tr:last-child td{border-bottom:0}.question-text{max-width:460px;white-space:normal}.badge{display:inline-block;border-radius:999px;padding:4px 9px;font-weight:700;font-size:13px}.badge.easy{background:#def8e8;color:#147145}.badge.medium{background:#fff0c9;color:#835800}.badge.hard{background:#ffe0e0;color:#a12e2e}.row-actions{display:flex;gap:6px;flex-wrap:wrap}.empty{text-align:center;color:var(--muted);padding:28px}
+.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:14px}table{width:100%;border-collapse:collapse;min-width:820px}th,td{padding:12px;border-bottom:1px solid #e2edf7;text-align:left;vertical-align:top}th{background:#edf6ff;color:#31516f;position:sticky;top:0}tr:last-child td{border-bottom:0}.question-text{max-width:460px;white-space:normal}.badge{display:inline-block;border-radius:999px;padding:4px 9px;font-weight:700;font-size:13px}.badge.easy{background:#def8e8;color:#147145}.badge.medium{background:#fff0c9;color:#835800}.badge.hard{background:#ffe0e0;color:#a12e2e}.badge.boss{background:#eadcff;color:#6417a8}.row-actions{display:flex;gap:6px;flex-wrap:wrap}.empty{text-align:center;color:var(--muted);padding:28px}
 .editor{margin-top:18px}.editor h2{margin-top:0}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.field{display:flex;flex-direction:column;gap:6px}.field.full{grid-column:1/-1}.field label{font-weight:700}.field input,.field select,.field textarea{padding:11px;border:1px solid var(--line);border-radius:10px;background:#fbfdff}.field textarea{min-height:90px;resize:vertical}.choice-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.check-row{display:flex;align-items:center;gap:8px;margin-top:8px}.editor-actions{display:flex;gap:9px;margin-top:16px;flex-wrap:wrap}
 .footnote{margin-top:14px;color:var(--muted);font-size:14px;line-height:1.65}
 @media(max-width:760px){.topbar{align-items:flex-start;flex-direction:column}.summary{grid-template-columns:1fr 1fr}.form-grid,.choice-grid{grid-template-columns:1fr}.field.full{grid-column:auto}}
@@ -50,6 +50,7 @@ button,input,select,textarea{font:inherit}.hidden{display:none!important}
       <div class="stat"><strong id="stat-easy">0</strong><span>ระดับง่าย</span></div>
       <div class="stat"><strong id="stat-medium">0</strong><span>ระดับปานกลาง</span></div>
       <div class="stat"><strong id="stat-hard">0</strong><span>ระดับยาก</span></div>
+      <div class="stat"><strong id="stat-boss">0</strong><span>ระดับบอส</span></div>
     </div>
 
     <section class="card">
@@ -59,12 +60,13 @@ button,input,select,textarea{font:inherit}.hidden{display:none!important}
           <option value="easy">ระดับง่าย</option>
           <option value="medium">ระดับปานกลาง</option>
           <option value="hard">ระดับยาก</option>
+          <option value="boss">ระดับบอส</option>
         </select>
         <button class="btn primary" id="add-btn">＋ เพิ่มโจทย์</button>
         <span class="spacer"></span>
-        <button class="btn" id="export-btn">⬇ ส่งออก JSON</button>
-        <label class="btn" for="import-input">⬆ นำเข้า JSON</label>
-        <input class="hidden" id="import-input" type="file" accept=".json,application/json">
+        <button class="btn" id="export-btn">⬇ ส่งออก CSV</button>
+        <label class="btn" for="import-input">⬆ นำเข้า CSV</label>
+        <input class="hidden" id="import-input" type="file" accept=".csv,text/csv">
         <button class="btn danger" id="reset-btn">↺ คืนค่าโจทย์เริ่มต้น</button>
       </div>
       <div id="status-message" class="notice hidden"></div>
@@ -85,7 +87,7 @@ button,input,select,textarea{font:inherit}.hidden{display:none!important}
           <div class="field">
             <label for="question-level">ระดับ</label>
             <select id="question-level" required>
-              <option value="easy">ง่าย</option><option value="medium">ปานกลาง</option><option value="hard">ยาก</option>
+              <option value="easy">ง่าย</option><option value="medium">ปานกลาง</option><option value="hard">ยาก</option><option value="boss">บอส</option>
             </select>
           </div>
           <div class="field">
@@ -126,7 +128,7 @@ button,input,select,textarea{font:inherit}.hidden{display:none!important}
   'use strict';
   const ADMIN_PIN = '044441300';
   const SESSION_KEY = 'skyisland_admin_authenticated';
-  const labels = {easy:'ง่าย',medium:'ปานกลาง',hard:'ยาก'};
+  const labels = {easy:'ง่าย',medium:'ปานกลาง',hard:'ยาก',boss:'บอส'};
   const remoteMode = typeof google !== 'undefined' && google.script && google.script.run;
   let questions = [];
   let activePin = '';
@@ -183,7 +185,7 @@ button,input,select,textarea{font:inherit}.hidden{display:none!important}
     const filter = el('level-filter').value;
     const visible = filter === 'all' ? questions : questions.filter(q => q.level === filter);
     el('stat-all').textContent = questions.length;
-    ['easy','medium','hard'].forEach(level => {
+    ['easy','medium','hard','boss'].forEach(level => {
       el(`stat-${level}`).textContent = questions.filter(q => q.level === level && q.enabled).length;
     });
     rows.innerHTML = visible.length ? visible.map(q => `
@@ -314,24 +316,23 @@ button,input,select,textarea{font:inherit}.hidden{display:none!important}
   });
 
   el('export-btn').addEventListener('click', () => {
-    const payload = JSON.stringify({app:'ผจญภัยเกาะมหาสนุก',version:2,exportedAt:new Date().toISOString(),questions},null,2);
-    const blob = new Blob([payload],{type:'application/json'});
+    const payload = QuestionStore.exportCsv(questions);
+    const blob = new Blob([payload],{type:'text/csv;charset=utf-8'});
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `skyisland-questions-${new Date().toISOString().slice(0,10)}.json`;
+    link.download = `skyisland-questions-${new Date().toISOString().slice(0,10)}.csv`;
     link.click();
     URL.revokeObjectURL(link.href);
-    showStatus('ส่งออกคลังโจทย์แล้ว');
+    showStatus('ส่งออกคลังโจทย์เป็น CSV แล้ว');
   });
 
   el('import-input').addEventListener('change', async event => {
     const file = event.target.files[0];
     if (!file) return;
     try{
-      const parsed = JSON.parse(await file.text());
-      questions = Array.isArray(parsed) ? parsed : parsed.questions;
-      if (!Array.isArray(questions) || !questions.length) throw new Error('ไม่พบรายการโจทย์');
-      await persist('นำเข้าคลังโจทย์สำเร็จ');
+      questions = QuestionStore.parseCsv(await file.text());
+      if (!questions.length) throw new Error('ไม่พบรายการโจทย์ในไฟล์ CSV');
+      await persist('นำเข้าคลังโจทย์จาก CSV สำเร็จ');
     }catch(error){
       showStatus(`นำเข้าไม่สำเร็จ: ${error.message}`,'error');
     }

@@ -7,15 +7,15 @@
 <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Mitr:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --pink:#ff8fb1; --pink-deep:#ff6b91; --cream:#fff6ef;
-    --mint:#8fe3ac; --sky:#cfe8ff; --purple:#c3a6f2; --sun:#ffd36b;
-    --ink:#5b4b66; --card:#fffdfa;
+    --pink:#ff006e; --pink-deep:#d9005c; --cream:#fff7df;
+    --mint:#00d86f; --sky:#00b8ff; --purple:#8f00ff; --sun:#ffd000;
+    --ink:#271235; --card:#ffffff;
   }
   *{ box-sizing:border-box; }
   html,body{ margin:0; height:100%; overflow:hidden; }
   body{
     font-family:'Mitr', sans-serif; color:var(--ink);
-    background:linear-gradient(180deg,#dff1ff 0%,#eafff2 100%);
+    background:linear-gradient(180deg,#00b8ff 0%,#00e676 100%);
     user-select:none; -webkit-user-select:none;
   }
   .hidden{ display:none !important; }
@@ -271,12 +271,12 @@
       <input type="text" id="nameInput" maxlength="16" placeholder="ใส่ชื่อผู้เล่น..." value="นักผจญภัย">
       <div class="color-label">เลือกสีตัวละคร 🎨</div>
       <div id="colorPicker">
-        <button class="color-dot selected" style="--c:#ffd23f" data-color="0xffd23f" title="เหลือง"></button>
-        <button class="color-dot" style="--c:#ff5d8f" data-color="0xff5d8f" title="ชมพู"></button>
-        <button class="color-dot" style="--c:#40c4ff" data-color="0x40c4ff" title="ฟ้า"></button>
-        <button class="color-dot" style="--c:#5ce6a0" data-color="0x5ce6a0" title="เขียว"></button>
-        <button class="color-dot" style="--c:#b26bff" data-color="0xb26bff" title="ม่วง"></button>
-        <button class="color-dot" style="--c:#ff8a3d" data-color="0xff8a3d" title="ส้ม"></button>
+        <button class="color-dot selected" style="--c:#ffd000" data-color="0xffd000" title="เหลืองสด"></button>
+        <button class="color-dot" style="--c:#ff006e" data-color="0xff006e" title="ชมพูสด"></button>
+        <button class="color-dot" style="--c:#008cff" data-color="0x008cff" title="ฟ้าสด"></button>
+        <button class="color-dot" style="--c:#00c853" data-color="0x00c853" title="เขียวสด"></button>
+        <button class="color-dot" style="--c:#8f00ff" data-color="0x8f00ff" title="ม่วงสด"></button>
+        <button class="color-dot" style="--c:#ff5a00" data-color="0xff5a00" title="ส้มสด"></button>
       </div>
       <div id="qSource">🎲 ใช้โจทย์สุ่มอัตโนมัติ</div>
       <a id="adminLink" href="admin.html">⚙️ จัดการโจทย์</a>
@@ -859,7 +859,7 @@ function makeMascotMouthTexture(mood){
 }
 function buildMascotPlayer(opt){
   const g=new THREE.Group();
-  const bodyMat=new THREE.MeshStandardMaterial({color:opt.color,roughness:.46});
+  const bodyMat=new THREE.MeshStandardMaterial({color:opt.color,emissive:opt.color,emissiveIntensity:.1,roughness:.38});
   const inkMat=new THREE.MeshStandardMaterial({color:0x352b3e,roughness:.72});
   const whiteMat=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.28});
   const leafMat=new THREE.MeshStandardMaterial({color:0x00a896,roughness:.55});
@@ -895,7 +895,7 @@ function buildMascotPlayer(opt){
   let mood='happy';
   return {group:g,body,face,legL,legR,armL,armR,glow:null,baseColor:opt.color,
     setMood(next){mood=next;face.material.map=next==='sad'?sadTex:happyTex;face.material.needsUpdate=true;eyes.forEach(e=>e.pupil.position.y=s*(next==='sad'?.76:.80));},
-    setBodyColor(hex){bodyMat.color.set(hex);}, setColor(hex){this.baseColor=hex;bodyMat.color.set(hex);},
+    setBodyColor(hex){bodyMat.color.set(hex);bodyMat.emissive.set(hex);}, setColor(hex){this.baseColor=hex;bodyMat.color.set(hex);bodyMat.emissive.set(hex);},
     animate(t,moving){
       const energy=moving?2.1:1;
       armL.rotation.z=-.48+Math.sin(t*(moving?9:2.4))*.11*energy;
@@ -908,12 +908,12 @@ function buildMascotPlayer(opt){
 }
 
 /* ---------- player (สีเหลืองครีมอบอุ่น) ---------- */
-const player = buildMascotPlayer({ color:0xffd23f, size:1.28 });
+const player = buildMascotPlayer({ color:0xffd000, size:1.28 });
 player.group.position.set(0, GROUND_Y, 2.2);
 scene.add(player.group);
 
 // สีตัวละครที่ผู้เล่นเลือก (ค่าเริ่มต้น = เหลืองสด ให้ตรงกับปุ่มสีที่ถูกเลือกไว้ในหน้าเริ่มเกม)
-let chosenColor = 0xffd23f;
+let chosenColor = 0xffd000;
 player.setColor(chosenColor);
 
 // ป้ายชื่อตัวละครลอยอยู่เหนือหัว (หันหน้าเข้าหากล้องเสมอเพราะเป็น Sprite)
@@ -930,7 +930,7 @@ function setPlayerName(name){
 setPlayerName(playerName);
 
 /* ---------- Monster Pack 9 แบบ: สีสดอิ่มตัว ไม่ใช้พาสเทล ---------- */
-const MONSTER_PALETTE = [0x7b2cbf,0xff006e,0xffa000,0x0096ff,0xe60026,0x00a896,0xffc400,0x39b000,0xc7e500];
+const MONSTER_PALETTE = [0x8f00ff,0xff006e,0xff8c00,0x008cff,0xf00024,0x00b894,0xffd000,0x00c853,0xd7ff00];
 const MONSTER_INK = 0x190f21;
 
 function monsterMesh(parent, geometry, material, x, y, z){
@@ -951,7 +951,7 @@ function monsterTube(parent, points, radius, material){
   return monsterMesh(parent,new THREE.TubeGeometry(curve,18,radius,7,false),material,0,0,0);
 }
 function monsterBase(color, size, boxy){
-  const g=new THREE.Group(), bodyMat=new THREE.MeshStandardMaterial({color,roughness:.48});
+  const g=new THREE.Group(), bodyMat=new THREE.MeshStandardMaterial({color,emissive:color,emissiveIntensity:.09,roughness:.4});
   const inkMat=new THREE.MeshStandardMaterial({color:MONSTER_INK,roughness:.72});
   const geometry=boxy ? new THREE.BoxGeometry(1.12*size,1.12*size,.72*size) : new THREE.SphereGeometry(.58*size,24,18);
   const body=monsterMesh(g,geometry,bodyMat,0,.62*size,0);
@@ -963,7 +963,7 @@ function monsterBase(color, size, boxy){
   const armR=monsterOrb(g,.12*size,.62*size,.68*size,0,inkMat,.72,1.35,.72);
   armL.rotation.z=-.45; armR.rotation.z=.45;
   const m={group:g,body,face:null,legL,legR,armL,armR,glow:null,baseColor:color,eyes:[],wobblers:[],
-    setMood(){}, setBodyColor(hex){bodyMat.color.set(hex);}, setColor(hex){this.baseColor=hex;bodyMat.color.set(hex);},
+    setMood(){}, setBodyColor(hex){bodyMat.color.set(hex);bodyMat.emissive.set(hex);}, setColor(hex){this.baseColor=hex;bodyMat.color.set(hex);bodyMat.emissive.set(hex);},
     animate(t,near){
       const blink=Math.pow(Math.max(0,Math.sin(t*.72+this.variant)),46);
       this.eyes.forEach(e=>{e.white.scale.y=e.white.userData.baseY*(1-blink*.84);e.pupil.scale.y=Math.max(.08,e.pupil.userData.baseY*(1-blink*.9));e.shine.visible=blink<.55;});
