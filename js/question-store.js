@@ -3,7 +3,7 @@
   'use strict';
 
   const STORAGE_KEY = 'skyisland_question_bank_v1';
-  const LEVELS = ['easy', 'medium', 'hard'];
+  const LEVELS = ['easy', 'medium', 'hard', 'boss'];
 
   const DEFAULT_QUESTIONS = [
     {
@@ -148,19 +148,76 @@
     return load().filter(item => item.level === level && item.enabled);
   }
 
-  function importJson(text) {
-    const parsed = JSON.parse(text);
-    const items = Array.isArray(parsed) ? parsed : parsed.questions;
-    return save(items);
+  function csvCell(value) {
+    const text = String(value == null ? '' : value);
+    return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
   }
 
-  function exportJson() {
-    return JSON.stringify({
-      app: 'ผจญภัยเกาะมหาสนุก',
-      version: 1,
-      exportedAt: new Date().toISOString(),
-      questions: load()
-    }, null, 2);
+  function exportCsv(items) {
+    const rows = [['id', 'level', 'enabled', 'text', 'answer', 'choices', 'hint']];
+    normalizeBank(items || load()).forEach(item => {
+      rows.push([
+        item.id,
+        item.level,
+        item.enabled ? 'true' : 'false',
+        item.text,
+        item.answer,
+        item.choices.join('|'),
+        item.hint
+      ]);
+    });
+    return '\uFEFF' + rows.map(row => row.map(csvCell).join(',')).join('\r\n');
+  }
+
+  function parseCsvRows(text) {
+    const rows = [];
+    let row = [], value = '', quoted = false;
+    const input = String(text || '').replace(/^\uFEFF/, '');
+    for (let i = 0; i < input.length; i++) {
+      const char = input[i];
+      if (quoted) {
+        if (char === '"' && input[i + 1] === '"') { value += '"'; i++; }
+        else if (char === '"') quoted = false;
+        else value += char;
+      } else if (char === '"') quoted = true;
+      else if (char === ',') { row.push(value); value = ''; }
+      else if (char === '\n') { row.push(value.replace(/\r$/, '')); rows.push(row); row = []; value = ''; }
+      else value += char;
+    }
+    if (value.length || row.length) { row.push(value.replace(/\r$/, '')); rows.push(row); }
+    return rows.filter(cells => cells.some(cell => String(cell).trim()));
+  }
+
+  function parseCsv(text) {
+    const rows = parseCsvRows(text);
+    if (rows.length < 2) return [];
+    const aliases = {
+      id: ['id'], level: ['level', 'ระดับ'], enabled: ['enabled', 'เปิดใช้'],
+      text: ['text', 'โจทย์'], answer: ['answer', 'คำตอบ'],
+      choices: ['choices', 'ตัวเลือก'], hint: ['hint', 'คำใบ้']
+    };
+    const headers = rows[0].map(value => String(value).trim().toLowerCase());
+    const column = name => headers.findIndex(header => aliases[name].includes(header));
+    const indexes = Object.fromEntries(Object.keys(aliases).map(name => [name, column(name)]));
+    if (indexes.text < 0 || indexes.answer < 0) throw new Error('CSV ต้องมีคอลัมน์ text/โจทย์ และ answer/คำตอบ');
+    const items = rows.slice(1).map((cells, index) => {
+      const get = name => indexes[name] < 0 ? '' : String(cells[indexes[name]] || '').trim();
+      const enabledText = get('enabled').toLowerCase();
+      return {
+        id: get('id') || `question-${Date.now()}-${index}`,
+        level: get('level') || 'easy',
+        enabled: !['false', '0', 'no', 'ไม่'].includes(enabledText),
+        text: get('text'),
+        answer: Number(get('answer')),
+        choices: get('choices').split('|').map(Number).filter(Number.isFinite),
+        hint: get('hint')
+      };
+    });
+    return normalizeBank(items);
+  }
+
+  function importCsv(text) {
+    return save(parseCsv(text));
   }
 
   window.QuestionStore = {
@@ -171,7 +228,8 @@
     save,
     reset,
     enabledForLevel,
-    importJson,
-    exportJson
+    parseCsv,
+    importCsv,
+    exportCsv
   };
 })();
